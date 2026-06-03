@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import User
+from django.utils import timezone
+from .models import User, TeacherProfile, StudentProfile
 
 User = get_user_model()
 
@@ -41,7 +42,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class TeacherCreateSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
+    """Serializer for creating teachers - only for admin"""
+    department = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    subjects_taught = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     
     class Meta:
         model = User
@@ -49,15 +53,86 @@ class TeacherCreateSerializer(serializers.ModelSerializer):
                   'employee_id', 'qualification', 'department', 'subjects_taught', 'password']
     
     def create(self, validated_data):
+        # Extract teacher profile data
+        department = validated_data.pop('department', 'General')
+        subjects_taught = validated_data.pop('subjects_taught', '')
+        
+        # Set user type
         validated_data['user_type'] = 'teacher'
+        
+        # Get password or generate random one
+        password = validated_data.pop('password', None)
+        
+        # Create user
         user = User.objects.create_user(**validated_data)
+        
+        # Set password if provided, otherwise use default
+        if password:
+            user.set_password(password)
+            user.save()
+        
+        # Create teacher profile - joining_date will be auto set by auto_now_add
+        TeacherProfile.objects.create(
+            user=user,
+            department=department or 'General',
+            subjects_taught=subjects_taught or '',
+            is_class_teacher=False,
+            class_assigned=None
+        )
+        
         return user
 
+class TeacherUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating teachers"""
+    department = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    subjects_taught = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'phone_number',
+                  'employee_id', 'qualification', 'department', 'subjects_taught', 'is_active']
+    
+    def update(self, instance, validated_data):
+        # Extract teacher profile data
+        department = validated_data.pop('department', None)
+        subjects_taught = validated_data.pop('subjects_taught', None)
+        
+        # Update user fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Update teacher profile if data provided
+        if department is not None or subjects_taught is not None:
+            profile = instance.teacher_profile
+            if department is not None:
+                profile.department = department
+            if subjects_taught is not None:
+                profile.subjects_taught = subjects_taught
+            profile.save()
+        
+        return instance
+
 class TeacherListSerializer(serializers.ModelSerializer):
+    """Serializer for listing teachers with profile info"""
+    department = serializers.SerializerMethodField()
+    subjects_taught = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                  'phone_number', 'employee_id', 'qualification', 'is_active']
+                  'phone_number', 'employee_id', 'qualification', 'is_active',
+                  'department', 'subjects_taught']
+    
+    def get_department(self, obj):
+        if hasattr(obj, 'teacher_profile') and obj.teacher_profile:
+            return obj.teacher_profile.department
+        return None
+    
+    def get_subjects_taught(self, obj):
+        if hasattr(obj, 'teacher_profile') and obj.teacher_profile:
+            return obj.teacher_profile.subjects_taught
+        return None
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)

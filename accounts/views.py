@@ -8,8 +8,8 @@ from django.contrib.auth.models import update_last_login
 from .models import User, TeacherProfile, StudentProfile
 from .serializers import (
     UserLoginSerializer, UserRegistrationSerializer, UserSerializer,
-    TeacherCreateSerializer, TeacherListSerializer, ChangePasswordSerializer,
-    PasswordResetSerializer, PasswordResetConfirmSerializer
+    TeacherCreateSerializer, TeacherListSerializer, TeacherUpdateSerializer,
+    ChangePasswordSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 )
 from django.core.mail import send_mail
 from django.conf import settings
@@ -149,58 +149,37 @@ class CreateTeacherView(APIView):
     permission_classes = [IsAdminUser]
     
     def post(self, request):
-        serializer = TeacherCreateSerializer(data=request.data)
+        # Get the data from request
+        data = request.data.copy()  # Create a mutable copy
+        
+        # Check if password is provided
+        password = data.get('password', '')
+        
+        # Generate password if not provided
+        if not password:
+            password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+            data['password'] = password
+        
+        serializer = TeacherCreateSerializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
             
-            # Generate random password
-            password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-            user.set_password(password)
-            user.save()
-            
-            # Create teacher profile
-            TeacherProfile.objects.create(
-                user=user,
-                department=serializer.validated_data.get('department', 'General'),
-                subjects_taught=serializer.validated_data.get('subjects_taught', '')
-            )
-            
-            # Send email with credentials
-            self.send_credentials_email(user, password)
-            
+            # Return the generated password in response
             return Response({
                 'success': True,
                 'message': 'Teacher created successfully',
-                'teacher': TeacherListSerializer(user).data
+                'teacher': TeacherListSerializer(user).data,
+                'generated_password': password  # Send password back to frontend
             }, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def send_credentials_email(self, user, password):
-        subject = f"Your Teacher Account Credentials"
-        message = f"""
-        Dear {user.get_full_name() or user.username},
-        
-        Your teacher account has been created.
-        
-        Login Credentials:
-        Username: {user.username}
-        Password: {password}
-        
-        Please login and change your password.
-        """
-        
-        try:
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-        except Exception as e:
-            print(f"Email error: {e}")
 
 class TeacherListView(APIView):
     """List all teachers (Admin only)"""
     permission_classes = [IsAdminUser]
     
     def get(self, request):
-        teachers = User.objects.filter(user_type='teacher')
+        teachers = User.objects.filter(user_type='teacher').select_related('teacher_profile')
         serializer = TeacherListSerializer(teachers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -223,10 +202,10 @@ class UpdateTeacherView(APIView):
     def put(self, request, teacher_id):
         try:
             teacher = User.objects.get(id=teacher_id, user_type='teacher')
-            serializer = TeacherCreateSerializer(teacher, data=request.data, partial=True)
+            serializer = TeacherUpdateSerializer(teacher, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'success': True, 'teacher': serializer.data}, status=status.HTTP_200_OK)
+                return Response({'success': True, 'teacher': TeacherListSerializer(teacher).data}, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)

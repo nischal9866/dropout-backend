@@ -53,9 +53,9 @@ class User(AbstractUser):
 class TeacherProfile(models.Model):
     """Additional teacher information"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
-    department = models.CharField(max_length=100)
-    joining_date = models.DateField(default=timezone.now)
-    subjects_taught = models.TextField(help_text="Comma-separated subjects")
+    department = models.CharField(max_length=100, blank=True, null=True)  # Allow null
+    joining_date = models.DateField(auto_now_add=True)  # Auto set to current date
+    subjects_taught = models.TextField(blank=True, null=True)  # Allow null
     is_class_teacher = models.BooleanField(default=False)
     class_assigned = models.CharField(max_length=20, blank=True, null=True)
     
