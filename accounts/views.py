@@ -15,6 +15,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 import random
 import string
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from datetime import timedelta
 
 class UserLoginView(APIView):
     """Handle user login and return JWT tokens"""
@@ -29,8 +32,13 @@ class UserLoginView(APIView):
             user = authenticate(username=username, password=password)
             
             if user and user.is_active:
+                # Generate tokens
                 refresh = RefreshToken.for_user(user)
-                update_last_login(None, user)
+                
+                # Add custom claims
+                refresh['user_id'] = user.id
+                refresh['username'] = user.username
+                refresh['user_type'] = user.user_type
                 
                 return Response({
                     'success': True,
@@ -54,7 +62,7 @@ class UserLoginView(APIView):
                 }, status=status.HTTP_401_UNAUTHORIZED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
 class UserLogoutView(APIView):
     """Handle user logout by blacklisting token"""
     permission_classes = [IsAuthenticated]
