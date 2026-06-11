@@ -5,8 +5,6 @@ from pathlib import Path
 from django.conf import settings
 import json
 import logging
-import warnings
-warnings.filterwarnings('ignore')  # Add this to suppress warnings
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ class DropoutPredictor:
         self.feature_names = None
         self.categorical_mappings = None
         self.model_info = None
-        self.threshold = 0.40
+        self.threshold = 0.40  # Optimal threshold from your analysis
         self.load_models()
     
     def load_models(self):
@@ -72,10 +70,10 @@ class DropoutPredictor:
                 print(f"✅ Model info loaded - Threshold: {self.threshold}")
                 print(f"   Model: {self.model_info.get('model_name')}")
                 print(f"   Strategy: {self.model_info.get('strategy')}")
-                perf = self.model_info.get('performance', {})
-                print(f"   Recall: {perf.get('recall', 'N/A')}")
+                print(f"   Recall: {self.model_info.get('performance', {}).get('recall', 'N/A')}")
             
             print("\n🎯 Dropout Prediction System Ready!")
+            print("   Using Logistic Regression (Balanced) - 76.86% Recall")
             
         except Exception as e:
             print(f"❌ Error loading models: {str(e)}")
@@ -116,14 +114,15 @@ class DropoutPredictor:
                     index=df.index
                 )
             
-            # Scale features - Convert to numpy array to avoid feature name warning
+            # Scale features
             if self.scaler:
-                # Use numpy array instead of DataFrame to avoid feature name warning
-                df_scaled = self.scaler.transform(df)
-                # Don't convert back to DataFrame, keep as numpy array
-                return df_scaled
+                df = pd.DataFrame(
+                    self.scaler.transform(df),
+                    columns=df.columns,
+                    index=df.index
+                )
             
-            return df.values  # Return as numpy array
+            return df
             
         except Exception as e:
             logger.error(f"Preprocessing error: {str(e)}")
@@ -135,7 +134,7 @@ class DropoutPredictor:
             if self.model is None:
                 return self.get_error_response("Model not loaded")
             
-            # Preprocess input (returns numpy array)
+            # Preprocess input
             processed_data = self.preprocess_input(student_data)
             
             # Make prediction
@@ -230,11 +229,6 @@ class DropoutPredictor:
         if study_hours < 3:
             recommendations.append(f"📚 Increase study time to 3-4 hours per day")
         
-        # Assignment delays
-        delays = float(data.get('Assignment_Delay_Days', 0))
-        if delays > 10:
-            recommendations.append(f"📝 Address assignment delays - Time management workshop")
-        
         return list(dict.fromkeys(recommendations))[:5]
     
     def get_key_factors(self, data, probability):
@@ -246,28 +240,16 @@ class DropoutPredictor:
             factors.append(f"Low GPA ({gpa:.2f}) - Major risk factor")
         
         attendance = float(data.get('Attendance_Rate', 100))
-        if attendance < 70:
-            factors.append(f"Critical absenteeism ({attendance}%)")
-        elif attendance < 85:
+        if attendance < 75:
             factors.append(f"Poor attendance ({attendance}%)")
         
         study_hours = float(data.get('Study_Hours_per_Day', 0))
-        if study_hours < 2:
+        if study_hours < 3:
             factors.append(f"Insufficient study time ({study_hours} hrs/day)")
         
-        delays = float(data.get('Assignment_Delay_Days', 0))
-        if delays > 15:
-            factors.append(f"Severe assignment delays ({delays} days)")
-        elif delays > 7:
-            factors.append(f"Regular assignment delays ({delays} days)")
-        
-        scholarship = data.get('Scholarship', 'No')
-        if scholarship == 'No' and gpa < 2.5:
-            factors.append("No financial aid with academic difficulties")
-        
-        part_time = data.get('Part_Time_Job', 'No')
-        if part_time == 'Yes' and study_hours < 3:
-            factors.append("Work-study balance issue")
+        failures = float(data.get('Assignment_Delay_Days', 0))
+        if failures > 10:
+            factors.append(f"Assignment delays ({failures} days)")
         
         return factors[:3]
 

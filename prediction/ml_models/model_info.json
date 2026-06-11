@@ -1,0 +1,42 @@
+{
+  "model_name": "Logistic Regression",
+  "strategy": "balanced",
+  "threshold": 0.4,
+  "performance": {
+    "recall": 0.7686,
+    "precision": 0.4732,
+    "f1_score": 0.5858,
+    "roc_auc": 0.8206,
+    "accuracy": 0.744
+  },
+  "feature_count": 17,
+  "features": [
+    "Age",
+    "Gender",
+    "Family_Income",
+    "Internet_Access",
+    "Study_Hours_per_Day",
+    "Attendance_Rate",
+    "Assignment_Delay_Days",
+    "Travel_Time_Minutes",
+    "Part_Time_Job",
+    "Scholarship",
+    "Stress_Index",
+    "GPA",
+    "Semester_GPA",
+    "CGPA",
+    "Semester",
+    "Department",
+    "Parental_Education"
+  ],
+  "categorical_features": [
+    "Gender",
+    "Internet_Access",
+    "Part_Time_Job",
+    "Scholarship",
+    "Semester",
+    "Department",
+    "Parental_Education"
+  ],
+  "training_date": "2026-06-11T22:14:56.770463"
+}
