@@ -3,10 +3,9 @@
   "strategy": "balanced",
   "threshold": 0.4,
   "performance": {
-    "recall": 0.7686,
-    "precision": 0.4732,
-    "f1_score": 0.5858,
-    "roc_auc": 0.8206,
+    "recall": 0.7685774946921444,
+    "precision": 0.47320261437908495,
+    "f1_score": 0.5857605177993528,
     "accuracy": 0.744
   },
   "feature_count": 17,
@@ -38,5 +37,5 @@
     "Department",
     "Parental_Education"
   ],
-  "training_date": "2026-06-11T22:14:56.770463"
+  "training_date": "2026-07-24T13:18:27.232568"
 }

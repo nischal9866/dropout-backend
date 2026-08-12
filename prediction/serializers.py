@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 class PredictionInputSerializer(serializers.Serializer):
     """Serializer matching your dataset columns"""
+    student_db_id = serializers.IntegerField(required=False, allow_null=True)
     
     # Personal Info
     Age = serializers.FloatField(required=True, min_value=15, max_value=100)

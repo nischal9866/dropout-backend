@@ -20,15 +20,15 @@ def test_prediction():
     
     # Check if model is loaded
     if predictor.model is None:
-        print("\n❌ Model not loaded!")
+        print("\n[ERROR] Model not loaded!")
         print("Please make sure model files are in prediction/ml_models/")
         return
     
-    print("\n✅ Model loaded successfully!")
+    print("\n[SUCCESS] Model loaded successfully!")
     print(f"   Model type: {type(predictor.model).__name__}")
     print(f"   Features: {len(predictor.feature_names) if predictor.feature_names else 0}")
     
-    # Test student data (using your exact feature names)
+    # Test student data (using exact feature names)
     test_student = {
         'Age': 20.5,
         'Gender': 'Male',
@@ -49,16 +49,16 @@ def test_prediction():
         'Parental_Education': 'High School'
     }
     
-    print("\n📊 Test Student Data:")
+    print("\n[INFO] Test Student Data:")
     for key, value in test_student.items():
         print(f"   {key}: {value}")
     
     # Make prediction
-    print("\n🔄 Making prediction...")
+    print("\n[INFO] Making prediction...")
     result = predictor.predict(test_student)
     
     print("\n" + "="*60)
-    print("🎯 PREDICTION RESULT")
+    print("PREDICTION RESULT")
     print("="*60)
     print(f"   Dropout Probability: {result.get('dropout_probability', 'N/A')}%")
     print(f"   Risk Level: {result.get('risk_level', 'N/A')}")
@@ -67,20 +67,30 @@ def test_prediction():
     print(f"   Model Used: {result.get('model_used', 'N/A')}")
     
     if result.get('key_factors'):
-        print("\n⚠️ Key Risk Factors:")
+        print("\n[WARNING] Key Risk Factors:")
         for factor in result['key_factors']:
-            print(f"   • {factor}")
+            print(f"   * {factor}")
+            
+    if result.get('shap_explanation'):
+        print("\n[XAI] SHAP Explanation (Log-Odds Contributions):")
+        shap_exp = result['shap_explanation']
+        print(f"   Base Value (Expected Log-Odds): {shap_exp['base_value']}")
+        print(f"   Prediction Value (Log-Odds): {shap_exp['prediction_value']}")
+        print("   Top Contributing Features:")
+        # Print top 5 features
+        for f in shap_exp['features'][:8]:
+            impact = "Increases Risk (+)" if f['shap_value'] > 0 else "Decreases Risk (-)"
+            print(f"     - {f['name']}: {f['value']} (SHAP: {f['shap_value']:.4f}) -> {impact}")
     
     if result.get('recommendations'):
-        print("\n💡 Recommendations:")
+        print("\n[INFO] Recommendations:")
         for rec in result['recommendations']:
-            print(f"   • {rec}")
+            print(f"   * {rec}")
     
     print("\n" + "="*60)
     
     # Check if files exist
-    print("\n📁 Checking model files:")
-    import os
+    print("\n[INFO] Checking model files:")
     from pathlib import Path
     
     model_dir = Path(__file__).parent / 'prediction' / 'ml_models'
@@ -88,9 +98,9 @@ def test_prediction():
         files = list(model_dir.glob('*.pkl')) + list(model_dir.glob('*.json'))
         for f in files:
             size = f.stat().st_size
-            print(f"   ✅ {f.name} ({size:,} bytes)")
+            print(f"   [OK] {f.name} ({size:,} bytes)")
     else:
-        print(f"   ❌ Model directory not found: {model_dir}")
+        print(f"   [ERROR] Model directory not found: {model_dir}")
     
     print("\n" + "="*60)
 
