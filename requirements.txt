@@ -23,7 +23,7 @@ cachetools==5.5.2
 category_encoders==2.10.0
 celery==5.3.4
 certifi==2025.10.5
-cffi==1.17.1
+cffi
 charset-normalizer==3.4.2
 click==8.2.1
 click-didyoumean==0.3.1
