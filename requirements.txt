@@ -241,8 +241,8 @@ statsmodels==0.14.6
 streamlit==1.55.0
 sympy==1.14.0
 tenacity==9.1.4
-# tensorflow==2.21.0
-tensorflow>=2.22,<2.23
+# tensorflow removed – no compatible wheel for Python 3.14; use pinned rc for Python 3.11
+tensorflow==2.22.0rc0
 termcolor==3.3.0
 terminado==0.18.1
 threadpoolctl==3.6.0
