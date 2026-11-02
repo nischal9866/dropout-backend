@@ -242,7 +242,7 @@ streamlit==1.55.0
 sympy==1.14.0
 tenacity==9.1.4
 # tensorflow==2.21.0
-tensorflow>=2.22
+tensorflow>=2.22,<2.23
 termcolor==3.3.0
 terminado==0.18.1
 threadpoolctl==3.6.0
