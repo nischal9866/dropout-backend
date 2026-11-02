@@ -32,7 +32,7 @@ class StudentListView(APIView):
             students = Student.objects.all().order_by('-created_at')
             
             # Check if user is admin or teacher - they can see all students
-            if request.user.user_type in ['admin', 'teacher'] or request.user.is_superuser:
+            if request.user.user_type in ['admin', 'teacher'] or request.user.is_superuser or request.user.is_staff:
                 serializer = StudentListSerializer(students, many=True)
                 return Response({
                     'success': True,
@@ -80,7 +80,7 @@ class StudentDetailView(APIView):
             student = Student.objects.get(id=pk)
             
             # Check permissions
-            if request.user.user_type == 'student':
+            if request.user.user_type == 'student' and not request.user.is_superuser and not request.user.is_staff:
                 try:
                     own_student = Student.objects.get(user=request.user)
                     if own_student.id != student.id:
@@ -332,7 +332,7 @@ class StudentPredictionsView(APIView):
             student = Student.objects.get(id=student_id)
             
             # Check permissions
-            if request.user.user_type == 'student':
+            if request.user.user_type == 'student' and not request.user.is_superuser and not request.user.is_staff:
                 try:
                     own_student = Student.objects.get(user=request.user)
                     if own_student.id != student.id:

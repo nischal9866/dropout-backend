@@ -129,6 +129,16 @@ class DropoutPredictor:
             background_path = model_dir / 'background_data.pkl'
             if background_path.exists():
                 self.background_data = joblib.load(background_path)
+                if isinstance(self.background_data.get('X_train_raw'), np.ndarray):
+                    self.background_data['X_train_raw'] = pd.DataFrame(
+                        self.background_data['X_train_raw'],
+                        columns=self.feature_names
+                    )
+                if isinstance(self.background_data.get('X_train_scaled'), np.ndarray):
+                    self.background_data['X_train_scaled'] = pd.DataFrame(
+                        self.background_data['X_train_scaled'],
+                        columns=self.feature_names
+                    )
                 
                 # 1. SHAP Explainer
                 try:
@@ -226,6 +236,8 @@ class DropoutPredictor:
             print("\n[INFO] Dropout Prediction Ready with Dalex & Shapash!")
             
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(f"[ERROR] Error loading models: {str(e)}")
 
     
