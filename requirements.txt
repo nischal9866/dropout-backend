@@ -7,10 +7,10 @@ amqp==5.3.1
 annotated-types==0.7.0
 anyio==4.9.0
 
-setuptools>=65,<68
+argon2-cffi-bindings==25.1.0
 argon2-cffi==25.1.0
 
-setuptools>=65,<68
+argon2-cffi-bindings==25.1.0
 argon2-cffi==25.1.0-bindings==25.1.0
 arrow==1.4.0
 asgiref==3.8.1
@@ -28,7 +28,7 @@ category_encoders==2.10.0
 celery==5.3.4
 certifi==2025.10.5
 cffi
-setuptools>=65,<68
+argon2-cffi-bindings==25.1.0
 argon2-cffi==25.1.0
 charset-normalizer==3.4.2
 click==8.2.1
