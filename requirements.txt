@@ -202,7 +202,7 @@ python-decouple==3.8
 python-dotenv==1.1.0
 python-json-logger==4.1.0
 pytz==2025.2
-pywinpty==3.0.3
+# pywinpty==3.0.3
 PyYAML==6.0.3
 pyzmq==27.1.0
 redis==4.5.5
